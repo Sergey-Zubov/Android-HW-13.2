@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -12,8 +13,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -72,11 +76,20 @@ public class MainActivity extends AppCompatActivity {
                 String stringLogin = mEditTextLogin.getText().toString();
                 String stringPassword = mEditTextPassword.getText().toString();
                 if(stringLogin.length() > 0 && stringPassword.length() > 0) {
-                    if (saveLoginAndPassword(stringLogin, stringPassword)) {
-                        Toast.makeText(MainActivity.this, R.string.user_registered,
-                                Toast.LENGTH_LONG).show();
-                        mEditTextLogin.setText("");
-                        mEditTextPassword.setText("");
+                    if (mCheckBoxStorage.isChecked()) {
+                        if (saveValuesToExternalStorage(stringLogin, stringPassword)) {
+                            Toast.makeText(MainActivity.this, R.string.user_registered,
+                                    Toast.LENGTH_LONG).show();
+                            mEditTextLogin.setText("");
+                            mEditTextPassword.setText("");
+                        }
+                    } else {
+                        if (saveValuesToInternalStorage(stringLogin, stringPassword)) {
+                            Toast.makeText(MainActivity.this, R.string.user_registered,
+                                    Toast.LENGTH_LONG).show();
+                            mEditTextLogin.setText("");
+                            mEditTextPassword.setText("");
+                        }
                     }
                 } else {
                     Toast.makeText(MainActivity.this, R.string.login_or_password_is_empty,
@@ -95,8 +108,33 @@ public class MainActivity extends AppCompatActivity {
                 String checkBoxStatus = String.valueOf(isChecked);
                 editor.putString(SELECTED_STORAGE, checkBoxStatus);
                 editor.apply();
+                if (isChecked) {
+                    valuesFromInternalToExternalStorage();
+                } else {
+                    valuesFromExternalToInternalStorage();
+                }
             }
         });
+    }
+
+    private void valuesFromExternalToInternalStorage() {
+        String[] values = loadValuesFromExternalStorage().split(",", 2);
+        if (values.length == 2) {
+            saveValuesToInternalStorage(values[0], values[1]);
+        } else {
+            Log.e(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword -> " +
+                    "values.length != 2");
+        }
+    }
+
+    private void valuesFromInternalToExternalStorage() {
+        String[] values = loadValuesFromInternalStorage().split(",", 2);
+        if (values.length == 2) {
+            saveValuesToExternalStorage(values[0], values[1]);
+        } else {
+            Log.e(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword -> " +
+                    "values.length != 2");
+        }
     }
 
     private void getDataFromSharedPref() {
@@ -109,7 +147,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean compareLoginAndPassword(String login, String password) {
         Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword");
         if (login != null && password != null) {
-            String[] values = loadValues().split("\n");
+            String[] values;
+            if (mCheckBoxStorage.isChecked()) {
+                values = loadValuesFromExternalStorage().split(",", 2);
+            } else {
+                values = loadValuesFromInternalStorage().split(",", 2);
+            }
             if (values.length == 2) {
                 String storedLogin = values[0];
                 String storedPassword = values[1];
@@ -124,15 +167,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private boolean saveLoginAndPassword(String login, String password) {
-        Log.d(TAG, "MainActivity -> BtnRegistration -> OnClick -> saveLoginAndPassword");
-        if (login != null && password != null) {
-            return saveValues(login, password);
-        }
-        return false;
-    }
-
-    private boolean saveValues(String login, String password) {
+    private boolean saveValuesToInternalStorage(String login, String password) {
         Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> saveLoginAndPassword -> saveValue");
         try {
             FileOutputStream fileOutputStream = openFileOutput(LOGIN_PASSWORD_FILE_NAME, MODE_PRIVATE);
@@ -149,16 +184,35 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private String loadValues() {
-        Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword -> loadValues");
+    private boolean saveValuesToExternalStorage(String login, String password) {
+        Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> saveLoginAndPassword -> saveValue");
+        if (isExternalStorageMounted()) {
+            if (login != null && password != null) {
+                try {
+                    File file = new File(this.getExternalFilesDir(null), LOGIN_PASSWORD_FILE_NAME);
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(file, false));
+                    bw.append(login).append("\n").append(password);
+                    bw.close();
+                    return true;
+                } catch (IOException ex){
+                    Log.e(TAG, "MainActivity -> btnRegistration -> onClick -> " +
+                            "saveLoginAndPassword -> saveValue", ex);
+                    ex.getStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+    private String loadValuesFromInternalStorage() {
+        Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword -> loadValuesFromInternalStorage");
         String values = "";
         try {
             FileInputStream fileInputStream = openFileInput(LOGIN_PASSWORD_FILE_NAME);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
             BufferedReader br = new BufferedReader(inputStreamReader);
-            values = br.readLine();
-            while (values != null) {
-                values = br.readLine();
+            while ((values = br.readLine())!= null) {
+                values = br.readLine() + ",";
             }
             br.close();
         } catch (IOException ex) {
@@ -167,5 +221,37 @@ public class MainActivity extends AppCompatActivity {
             ex.getStackTrace();
         }
         return values;
+    }
+
+    private String loadValuesFromExternalStorage() {
+        Log.d(TAG, "MainActivity -> BtnOk -> OnClick -> compareLoginAndPassword -> loadValuesFromExternalStorage");
+        File file = new File(this.getExternalFilesDir(null), LOGIN_PASSWORD_FILE_NAME);
+        String values = "";
+        if (isExternalStorageMounted()) {
+            if (file.exists()) {
+                try {
+                    if (file.length() > 0) {
+                        BufferedReader br = new BufferedReader(new FileReader(file));
+                        while ((values = br.readLine()) != null) {
+                            values = br.readLine() + ",";
+                        }
+                        br.close();
+                    } else {
+                        Log.d(TAG, "File is empty");
+                    }
+                } catch (IOException ex) {
+                    Log.e(TAG, "MainActivity -> btnOk -> onClick -> " +
+                            "compareLoginAndPassword -> loadValue", ex);
+                    ex.getStackTrace();
+                }
+            }
+        }
+        return values;
+    }
+
+    private boolean isExternalStorageMounted() {
+        Log.d(TAG, "MainActivity -> ");
+        return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(Environment.getExternalStorageState());
     }
 }
