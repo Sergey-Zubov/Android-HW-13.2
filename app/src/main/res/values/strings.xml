@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Android-HW-13.2</string>
+    <string name="login_hint">Login</string>
+    <string name="password_hint">Password</string>
+    <string name="btn_ok">Ok</string>
+    <string name="btn_registration">Registration</string>
+    <string name="log_pass_available">Login and password is available,\nUser is authenticated!</string>
+    <string name="log_pass_not_available">Login and password is not available</string>
+    <string name="user_registered">User is registered</string>
+    <string name="login_or_password_is_empty">Enter login and password!</string>
+    <string name="text_view_storage_data_in_external_storage">Storage data in external storage</string>
+    <string name="enter_login_and_password">Enter login and password!</string>
+</resources>
