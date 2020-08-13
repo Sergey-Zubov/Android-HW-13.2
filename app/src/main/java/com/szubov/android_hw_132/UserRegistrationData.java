@@ -30,8 +30,8 @@ public class UserRegistrationData {
     public boolean saveValuesToInternalStorage(String login, String password) {
         Log.d(TAG, "MainActivity -> saveValuesToInternalStorage");
         try {
-            FileOutputStream fileOutputStream = context.openFileOutput(loginPasswordFileName,
-                    MODE_PRIVATE);
+            FileOutputStream fileOutputStream = context.getApplicationContext().
+                    openFileOutput(loginPasswordFileName, MODE_PRIVATE);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
             BufferedWriter bw = new BufferedWriter(outputStreamWriter);
             bw.append(login).append("/").append(password);
@@ -49,8 +49,8 @@ public class UserRegistrationData {
         if (isExternalStorageMounted()) {
             if (login != null && password != null) {
                 try {
-                    File file = new File(context.getExternalFilesDir(null),
-                            loginPasswordFileName);
+                    File file = new File(context.getApplicationContext().
+                            getExternalFilesDir(null), loginPasswordFileName);
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, false));
                     bw.append(login).append("/").append(password);
                     bw.close();
@@ -68,7 +68,8 @@ public class UserRegistrationData {
         Log.d(TAG, "MainActivity -> loadValuesFromInternalStorage");
         String values = "";
         try {
-            FileInputStream fileInputStream = context.openFileInput(loginPasswordFileName);
+            FileInputStream fileInputStream = context.getApplicationContext().
+                    openFileInput(loginPasswordFileName);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
             BufferedReader br = new BufferedReader(inputStreamReader);
             values = br.readLine();
@@ -82,7 +83,8 @@ public class UserRegistrationData {
 
     public String loadValuesFromExternalStorage() {
         Log.d(TAG, "MainActivity -> loadValuesFromExternalStorage");
-        File file = new File(context.getExternalFilesDir(null), loginPasswordFileName);
+        File file = new File(context.getApplicationContext().getExternalFilesDir(null),
+                loginPasswordFileName);
         String values = "";
         if (isExternalStorageMounted()) {
             if (file.exists()) {
