@@ -18,8 +18,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences mCheckboxStatusSharedPref;
     public static final String SELECTED_STORAGE = "Selected storage";
     public static final String TAG = "my app";
-    public static final UserRegistrationData USER_REG_DATA =
-            new UserRegistrationData("UserRegistrationData.txt");;
+    public final UserRegistrationData USER_REG_DATA =
+            new UserRegistrationData(MainActivity.this,"UserRegistrationData.txt");;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,16 +68,14 @@ public class MainActivity extends AppCompatActivity {
                 String stringPassword = mEditTextPassword.getText().toString();
                 if(stringLogin.length() > 0 && stringPassword.length() > 0) {
                     if (mCheckBoxStorage.isChecked()) {
-                        if (USER_REG_DATA.saveValuesToExternalStorage(stringLogin, stringPassword,
-                                MainActivity.this)) {
+                        if (USER_REG_DATA.saveValuesToExternalStorage(stringLogin, stringPassword)) {
                             Toast.makeText(MainActivity.this, R.string.user_registered,
                                     Toast.LENGTH_LONG).show();
                             mEditTextLogin.setText("");
                             mEditTextPassword.setText("");
                         }
                     } else {
-                        if (USER_REG_DATA.saveValuesToInternalStorage(stringLogin, stringPassword,
-                                MainActivity.this)) {
+                        if (USER_REG_DATA.saveValuesToInternalStorage(stringLogin, stringPassword)) {
                             Toast.makeText(MainActivity.this, R.string.user_registered,
                                     Toast.LENGTH_LONG).show();
                             mEditTextLogin.setText("");
@@ -114,12 +112,11 @@ public class MainActivity extends AppCompatActivity {
     private void valuesFromExternalToInternalStorage() {
         Log.d(TAG, "MainActivity -> checkbox -> onCheckedChanged -> " +
                 "valuesFromExternalToInternalStorage");
-        String string = USER_REG_DATA.loadValuesFromExternalStorage(MainActivity.this);
+        String string = USER_REG_DATA.loadValuesFromExternalStorage();
         if (string.length() > 0) {
             String[] values = string.split("/");
             if (values.length == 2) {
-                USER_REG_DATA.saveValuesToInternalStorage(values[0], values[1],
-                        MainActivity.this);
+                USER_REG_DATA.saveValuesToInternalStorage(values[0], values[1]);
             } else {
                 Log.e(TAG, "MainActivity -> checkbox -> onCheckedChanged -> " +
                         "valuesFromExternalToInternalStorage");
@@ -130,12 +127,11 @@ public class MainActivity extends AppCompatActivity {
     private void valuesFromInternalToExternalStorage() {
         Log.d(TAG, "MainActivity -> checkbox -> onCheckedChanged -> " +
                 "valuesFromInternalToExternalStorage");
-        String string = USER_REG_DATA.loadValuesFromInternalStorage(MainActivity.this);
+        String string = USER_REG_DATA.loadValuesFromInternalStorage();
         if (string.length() > 0) {
             String[] values = string.split("/");
             if (values.length == 2) {
-                USER_REG_DATA.saveValuesToExternalStorage(values[0], values[1],
-                        MainActivity.this);
+                USER_REG_DATA.saveValuesToExternalStorage(values[0], values[1]);
             } else {
                 Log.e(TAG, "MainActivity -> checkbox -> onCheckedChanged -> " +
                         "valuesFromInternalToExternalStorage");
@@ -158,9 +154,9 @@ public class MainActivity extends AppCompatActivity {
             String[] values;
             String string;
             if (mCheckBoxStorage.isChecked()) {
-                string = USER_REG_DATA.loadValuesFromExternalStorage(MainActivity.this);
+                string = USER_REG_DATA.loadValuesFromExternalStorage();
             } else {
-                string = USER_REG_DATA.loadValuesFromInternalStorage(MainActivity.this);
+                string = USER_REG_DATA.loadValuesFromInternalStorage();
             }
             if (string.length() > 0) {
                 values = string.split("/");

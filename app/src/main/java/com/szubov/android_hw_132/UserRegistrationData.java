@@ -19,13 +19,15 @@ import static android.content.Context.MODE_PRIVATE;
 public class UserRegistrationData {
 
     public static final String TAG = "my app";
+    Context context;
     private String loginPasswordFileName;
 
-    public UserRegistrationData(String loginPasswordFileName) {
+    public UserRegistrationData(Context context, String loginPasswordFileName) {
+        this.context = context;
         this.loginPasswordFileName = loginPasswordFileName;
     }
 
-    public boolean saveValuesToInternalStorage(String login, String password, Context context) {
+    public boolean saveValuesToInternalStorage(String login, String password) {
         Log.d(TAG, "MainActivity -> saveValuesToInternalStorage");
         try {
             FileOutputStream fileOutputStream = context.openFileOutput(loginPasswordFileName,
@@ -42,7 +44,7 @@ public class UserRegistrationData {
         return false;
     }
 
-    public boolean saveValuesToExternalStorage(String login, String password, Context context) {
+    public boolean saveValuesToExternalStorage(String login, String password) {
         Log.d(TAG, "MainActivity -> saveValuesToExternalStorage");
         if (isExternalStorageMounted()) {
             if (login != null && password != null) {
@@ -62,7 +64,7 @@ public class UserRegistrationData {
         return false;
     }
 
-    public String loadValuesFromInternalStorage(Context context) {
+    public String loadValuesFromInternalStorage() {
         Log.d(TAG, "MainActivity -> loadValuesFromInternalStorage");
         String values = "";
         try {
@@ -78,7 +80,7 @@ public class UserRegistrationData {
         return values;
     }
 
-    public String loadValuesFromExternalStorage(Context context) {
+    public String loadValuesFromExternalStorage() {
         Log.d(TAG, "MainActivity -> loadValuesFromExternalStorage");
         File file = new File(context.getExternalFilesDir(null), loginPasswordFileName);
         String values = "";
